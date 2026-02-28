@@ -35,7 +35,7 @@ jobs:
           sdkmanager "ndk;27.3.13750724"
 
       - name: Grant Gradle Permission
-        run: chmod +x project/presictor/gradlew
+        run: chmod +x presictor/gradlew
 
       - name: Build Debug APK
         run: |
