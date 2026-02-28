@@ -30,7 +30,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Grant Gradle Permission
-        run: chmod +x project/gradlew
+        run: chmod +x Run chmod +x CaromPredictor/CaromPredictor/gradlew
 
       - name: Build Debug APK
         run: |
@@ -41,4 +41,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: APK
-          path: CaromPredictor/app/build/outputs/apk/debug/*.apk
+          path: CaromPredictor/CaromPredictor/app/build/outputs/apk/debug/*.apk
