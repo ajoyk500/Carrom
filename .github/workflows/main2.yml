@@ -1,0 +1,49 @@
+name: Build Android From ZIP
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract ZIP
+        run: |
+          unzip presictor.zip -d project
+          ls project
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK + NDK + CMake
+        run: |
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-36"
+          sdkmanager "build-tools;36.0.0"
+          sdkmanager "cmake;3.22.1"
+          sdkmanager "ndk;27.3.13750724"
+
+      - name: Grant Gradle Permission
+        run: chmod +x project/presictor/gradlew
+
+      - name: Build Debug APK
+        run: |
+          cd project/presictor
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: project/presictor/app/build/outputs/apk/debug/*.apk
