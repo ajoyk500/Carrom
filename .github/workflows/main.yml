@@ -1,0 +1,78 @@
+name: Build BlackBox ZIP (SDK 35)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    # 1. Checkout
+    - uses: actions/checkout@v4
+
+    # 2. Extract ZIP
+    - name: Extract ZIP
+      run: |
+        unzip *.zip -d extracted
+        ls -R extracted
+
+    # 3. Detect Project Root
+    - name: Detect Project
+      run: |
+        cd extracted
+        PROJECT_DIR=$(find . -name "settings.gradle*" | head -n 1 | xargs dirname)
+        echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+        echo "Project found at: $PROJECT_DIR"
+
+    # 4. Setup Java 21 (REQUIRED)
+    - name: Setup JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 21
+
+    # 5. Setup Android SDK
+    - name: Setup Android
+      uses: android-actions/setup-android@v3
+
+    # 6. Install SDK 35 + NDK 29
+    - name: Install SDK & NDK
+      run: |
+        sdkmanager "platform-tools"
+        sdkmanager "platforms;android-35"
+        sdkmanager "build-tools;35.0.0"
+
+        # exact ndk (tumhara)
+        sdkmanager "ndk;29.0.13846066" || echo "NDK 29 failed, fallback"
+
+        # fallback ndk (safe)
+        sdkmanager "ndk;26.1.10909125"
+
+        sdkmanager "cmake;3.22.1"
+
+    # 7. Prepare Gradle
+    - name: Prepare Gradle
+      run: |
+        cd extracted/$PROJECT_DIR
+        chmod +x gradlew
+
+    # 8. Clean Build
+    - name: Clean
+      run: |
+        cd extracted/$PROJECT_DIR
+        ./gradlew clean
+
+    # 9. Build APK
+    - name: Build APK
+      run: |
+        cd extracted/$PROJECT_DIR
+        ./gradlew assembleDebug --stacktrace --info
+
+    # 10. Upload APK
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: BlackBox-apk
+        path: extracted/**/build/outputs/apk/debug/*.apk
